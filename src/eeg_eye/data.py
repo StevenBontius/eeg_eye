@@ -1,4 +1,4 @@
-from loguru import logger 
+from loguru import logger
 from pathlib import Path
 from urllib import request
 
@@ -6,10 +6,11 @@ URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/00264/EEG%20Eye
 FILENAME = "EGG.arff"
 DEFAULT_DATA_DIR = Path.home() / ".cache/eeg_eye"
 
+
 def download(data_dir: Path = DEFAULT_DATA_DIR) -> None:
     if not data_dir.exists():
         data_dir.mkdir(parents=True)
-    
+
     file = data_dir / FILENAME
     temp_file = file.with_suffix(".tmp")
     if not file.exists():
