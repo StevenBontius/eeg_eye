@@ -13,6 +13,7 @@ dependencies = [
     "pandas>=3.0.1",
     "pathlib>=1.0.1",
     "scipy>=1.17.1",
+    "torch>=2.10.0",
 ]
 
 [build-system]
