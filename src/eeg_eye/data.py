@@ -1,6 +1,9 @@
 from loguru import logger
 from pathlib import Path
 from urllib import request
+import numpy as np
+import pandas as pd
+from scipy.io import arff
 
 URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/00264/EEG%20Eye%20State.arff"
 FILENAME = "EGG.arff"
@@ -24,3 +27,13 @@ def download(data_dir: Path = DEFAULT_DATA_DIR) -> None:
             raise
     else:
         logger.info("File exists")
+
+
+def load(data_dir: Path = DEFAULT_DATA_DIR) -> tuple[np.ndarray, np.ndarray]:
+    download(data_dir)
+    data = pd.DataFrame(arff.loadarff(data_dir / FILENAME)[0])
+
+    x = data.iloc[:, :-1].values
+    y = data.iloc[:, -1].values.astype(int)
+
+    return x, y
