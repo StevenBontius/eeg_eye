@@ -15,15 +15,35 @@ def _segments(X: np.ndarray, y: np.ndarray) -> list[tuple[np.ndarray, int]]:
 
 
 class EEGEyeDataset(torch.utils.data.Dataset):
-    def __init__(self, data_dir: Path = DEFAULT_DATA_DIR):
+    def __init__(
+        self, window_size: int = 50, stride: int = 50, data_dir: Path = DEFAULT_DATA_DIR
+    ):
         X, y = load(data_dir=data_dir)
         self.segments = _segments(X, y)
+        self.window_size = window_size
+        self.stride = stride
+        # calculate window sizes
+        self.window_count = [
+            max(0, (len(x) - self.window_size) // self.stride) for x, _ in self.segments
+        ]
+        # calculate cumulative window count for indexing, include 0 for first segment
+        self.cumulative_count = np.concatenate([[0], np.cumsum(self.window_count)])
 
     def __len__(self):
-        return len(self.segments)
+        return sum(self.window_count)
 
     def __getitem__(self, idx: int):
-        x_segment, label = self.segments[idx]
-        return torch.tensor(x_segment, dtype=torch.float32), torch.tensor(
+        # find segment, one step back for added
+        segment = np.searchsorted(self.cumulative_count, idx, side="right") - 1
+        # get the segment
+        x_array, label = self.segments[segment]
+        # find the index of the window within the segment
+        segment_index = idx - self.cumulative_count[segment]
+        # calculate where the window should start
+        window_start = segment_index * self.stride
+        # get the window from the segment
+        x_window = x_array[window_start : window_start + self.window_size]
+        # return tensors
+        return torch.tensor(x_window, dtype=torch.float32), torch.tensor(
             label, dtype=torch.float32
         )
