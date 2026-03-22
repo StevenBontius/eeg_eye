@@ -2,6 +2,7 @@ from loguru import logger
 import numpy as np
 import torch
 from pathlib import Path
+from typing import Literal
 
 from eeg_eye.data import load, DEFAULT_DATA_DIR
 
@@ -16,10 +17,26 @@ def _segments(X: np.ndarray, y: np.ndarray) -> list[tuple[np.ndarray, int]]:
 
 class EEGEyeDataset(torch.utils.data.Dataset):
     def __init__(
-        self, window_size: int = 50, stride: int = 50, data_dir: Path = DEFAULT_DATA_DIR
+        self,
+        split: Literal["train", "val"] = "train",
+        window_size: int = 50,
+        stride: int = 50,
+        data_dir: Path = DEFAULT_DATA_DIR,
+        split_ratio: float = 0.8,
+        seed: int = 42,
     ):
+        np.random.seed(seed)
         X, y = load(data_dir=data_dir)
         self.segments = _segments(X, y)
+
+        # splitting
+        np.random.shuffle(self.segments)
+        n_train = int(len(self.segments) * split_ratio)
+        if split == "train":
+            self.segments = self.segments[:n_train]
+        else:
+            self.segments = self.segments[n_train:]
+
         self.window_size = window_size
         self.stride = stride
         # calculate window sizes
