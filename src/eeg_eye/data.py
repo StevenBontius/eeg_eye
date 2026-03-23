@@ -4,6 +4,7 @@ from urllib import request
 import numpy as np
 import pandas as pd
 from scipy.io import arff
+from sklearn.preprocessing import MinMaxScaler
 
 URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/00264/EEG%20Eye%20State.arff"
 FILENAME = "EGG.arff"
@@ -33,7 +34,8 @@ def load(data_dir: Path = DEFAULT_DATA_DIR) -> tuple[np.ndarray, np.ndarray]:
     download(data_dir)
     data = pd.DataFrame(arff.loadarff(data_dir / FILENAME)[0])
 
+    scaler = MinMaxScaler
     x = data.iloc[:, :-1].values
     y = data.iloc[:, -1].values.astype(int)
-
+    x = scaler.fit_transform(x)
     return x, y
